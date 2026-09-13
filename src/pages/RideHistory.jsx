@@ -22,7 +22,7 @@ export default function RideHistory() {
   const isDriver = user?.role === "driver";
 
   return (
-    <div style={{ padding: "32px 24px", maxWidth: 840, margin: "0 auto" }}>
+    <div className="page-container" style={{ padding: "32px 24px", maxWidth: 840, margin: "0 auto" }}>
       <div style={{ marginBottom: 24 }}>
         <h2 style={{ margin: "0 0 6px", fontSize: "1.6rem" }}>Mission History</h2>
         <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.92rem" }}>

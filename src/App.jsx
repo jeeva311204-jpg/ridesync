@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Routes, Route, Navigate, Link } from "react-router-dom";
 import { useAuth } from "./context/AuthContext.jsx";
 import Login from "./pages/Login.jsx";
@@ -12,33 +13,53 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export default function App() {
   const { user, logout, loading } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (loading) return null;
 
   return (
     <div className="app-shell">
       <nav className="navbar">
-        <Link to="/" className="brand">
+        <Link to="/" className="brand" onClick={() => setMobileMenuOpen(false)}>
           <span className="brand-dot" />
           RideSync
         </Link>
-        <div className="nav-right">
+
+        {/* Mobile menu toggle hamburger */}
+        <button
+          className="mobile-menu-toggle"
+          onClick={() => setMobileMenuOpen((prev) => !prev)}
+          aria-label="Toggle Navigation"
+        >
+          {mobileMenuOpen ? "✕" : "☰"}
+        </button>
+
+        <div className={`nav-right ${mobileMenuOpen ? "mobile-open" : ""}`}>
           {user ? (
             <>
-              <Link to="/history">History</Link>
-              <Link to="/profile">Profile</Link>
-              <Link to="/admin">Admin</Link>
+              <Link to="/history" onClick={() => setMobileMenuOpen(false)}>History</Link>
+              <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</Link>
+              <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>Admin</Link>
               <span className="user-name-badge">
                 <span style={{ color: "#38bdf8", fontSize: "0.85rem" }}>✦</span> {user.name}
               </span>
               <span className="chip-role">{user.role}</span>
-              <button className="btn-ghost" onClick={logout}>Logout</button>
+              <button
+                className="btn-ghost"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  logout();
+                }}
+              >
+                Logout
+              </button>
             </>
           ) : (
             <>
-              <Link to="/login">Login</Link>
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
               <Link
                 to="/register"
+                onClick={() => setMobileMenuOpen(false)}
                 style={{
                   background: "var(--primary-gradient)",
                   color: "#ffffff",
@@ -46,6 +67,7 @@ export default function App() {
                   borderRadius: "var(--radius-sm)",
                   boxShadow: "0 0 16px rgba(139, 92, 246, 0.4)",
                   fontWeight: 700,
+                  textAlign: "center",
                 }}
               >
                 Register

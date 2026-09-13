@@ -42,7 +42,7 @@ export default function AdminDashboard() {
   }, [rides, tab]);
 
   return (
-    <div style={{ padding: "32px 28px", maxWidth: 1080, margin: "0 auto" }}>
+    <div className="page-container" style={{ padding: "32px 28px", maxWidth: 1080, margin: "0 auto" }}>
       <div style={{ marginBottom: 24 }}>
         <h2 style={{ margin: "0 0 6px", fontSize: "1.65rem" }}>Admin — Cosmic Mission Control</h2>
         <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.92rem" }}>
@@ -86,8 +86,8 @@ export default function AdminDashboard() {
       )}
 
       {filtered.length > 0 && (
-        <div className="card" style={{ padding: 0, overflow: "hidden", border: "1px solid var(--border-light)" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+        <div className="card" style={{ padding: 0, overflowX: "auto", WebkitOverflowScrolling: "touch", border: "1px solid var(--border-light)" }}>
+          <table style={{ width: "100%", minWidth: "640px", borderCollapse: "collapse", fontSize: "0.9rem" }}>
             <thead>
               <tr style={{ background: "rgba(14, 20, 48, 0.9)", textAlign: "left", borderBottom: "1px solid var(--border-light)" }}>
                 <th style={cellStyle}>Timestamp</th>

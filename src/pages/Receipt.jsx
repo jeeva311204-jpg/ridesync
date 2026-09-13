@@ -56,7 +56,7 @@ export default function Receipt() {
   const finalTotal = standardTotal + boostAmount;
 
   return (
-    <div style={{ padding: "32px 16px", maxWidth: 500, margin: "0 auto" }}>
+    <div className="page-container" style={{ padding: "32px 16px", maxWidth: 500, margin: "0 auto" }}>
       <div className="auth-card" style={{ width: "100%", padding: "36px 28px" }}>
         <div style={{ textAlign: "center", marginBottom: 12 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 4 }}>

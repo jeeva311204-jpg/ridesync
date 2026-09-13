@@ -1,4 +1,5 @@
-﻿import { MapContainer, TileLayer, Marker, Polyline, useMapEvents } from "react-leaflet";
+import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -17,6 +18,25 @@ const driverIcon = new L.Icon({
   iconSize: [28, 44],
   className: "driver-marker",
 });
+
+function MapResizeHandler() {
+  const map = useMap();
+  useEffect(() => {
+    map.invalidateSize();
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+    const handleResize = () => map.invalidateSize();
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
+  }, [map]);
+  return null;
+}
 
 function ClickCatcher({ onMapClick }) {
   useMapEvents({
@@ -38,6 +58,7 @@ export default function MapView({
 }) {
   return (
     <MapContainer center={center} zoom={13} style={{ height, width: "100%" }}>
+      <MapResizeHandler />
       <TileLayer
         attribution='&copy; OpenStreetMap contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

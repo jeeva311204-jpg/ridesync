@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { listenToAllRides } from "../firebase/rideService";
 import StatusBadge from "../components/StatusBadge.jsx";
 
@@ -42,59 +42,84 @@ export default function AdminDashboard() {
   }, [rides, tab]);
 
   return (
-    <div style={{ padding: "24px 32px", maxWidth: 1000, margin: "0 auto" }}>
-      <h2 style={{ marginBottom: 4 }}>Admin — Ride Overview</h2>
-      <p style={{ color: "var(--text-muted)", marginTop: 0 }}>
-        Every ride ever created, across all customers and drivers.
-      </p>
-
-      <div style={{ display: "flex", gap: 8, margin: "20px 0", flexWrap: "wrap" }}>
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className="btn-block"
-            style={{
-              width: "auto",
-              margin: 0,
-              padding: "8px 16px",
-              background: tab === t.key ? "var(--primary)" : "var(--surface-alt)",
-              color: tab === t.key ? "white" : "var(--text)",
-              border: tab === t.key ? "none" : "1.5px solid var(--border)",
-            }}
-          >
-            {t.label} ({counts[t.key]})
-          </button>
-        ))}
+    <div style={{ padding: "32px 28px", maxWidth: 1080, margin: "0 auto" }}>
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ margin: "0 0 6px", fontSize: "1.65rem" }}>Admin — Cosmic Mission Control</h2>
+        <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.92rem" }}>
+          Real-time global telemetry of all rides across customers and pilots.
+        </p>
       </div>
 
-      {filtered.length === 0 && <div className="empty-state">No rides in this category.</div>}
+      <div style={{ display: "flex", gap: 10, margin: "20px 0", flexWrap: "wrap" }}>
+        {TABS.map((t) => {
+          const isActive = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              style={{
+                width: "auto",
+                margin: 0,
+                padding: "8px 18px",
+                borderRadius: "var(--radius-full)",
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                cursor: "pointer",
+                background: isActive ? "var(--primary-gradient)" : "rgba(20, 28, 62, 0.6)",
+                color: isActive ? "#ffffff" : "var(--text-muted)",
+                border: isActive ? "none" : "1px solid var(--border-light)",
+                boxShadow: isActive ? "var(--primary-glow)" : "none",
+                transition: "all 0.2s ease",
+              }}
+            >
+              {t.label} ({counts[t.key]})
+            </button>
+          );
+        })}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="card empty-state" style={{ padding: 48 }}>
+          <div style={{ fontSize: "2rem", marginBottom: 8 }}>🛰️</div>
+          <p style={{ margin: 0, color: "var(--text-muted)" }}>No missions recorded in this filter.</p>
+        </div>
+      )}
 
       {filtered.length > 0 && (
-        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.88rem" }}>
+        <div className="card" style={{ padding: 0, overflow: "hidden", border: "1px solid var(--border-light)" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
             <thead>
-              <tr style={{ background: "var(--surface-alt)", textAlign: "left" }}>
-                <th style={cellStyle}>Time</th>
+              <tr style={{ background: "rgba(14, 20, 48, 0.9)", textAlign: "left", borderBottom: "1px solid var(--border-light)" }}>
+                <th style={cellStyle}>Timestamp</th>
                 <th style={cellStyle}>Customer</th>
-                <th style={cellStyle}>Driver</th>
+                <th style={cellStyle}>Pilot / Driver</th>
                 <th style={cellStyle}>Status</th>
                 <th style={cellStyle}>Distance</th>
-                <th style={cellStyle}>Ride ID</th>
+                <th style={cellStyle}>Mission ID</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((r) => (
-                <tr key={r.id} style={{ borderTop: "1px solid var(--border)" }}>
-                  <td style={cellStyle}>{formatTime(r.createdAt)}</td>
-                  <td style={cellStyle}>{r.customerName || "-"}</td>
+                <tr
+                  key={r.id}
+                  style={{
+                    borderTop: "1px solid var(--border)",
+                    transition: "background 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(139, 92, 246, 0.08)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  <td style={{ ...cellStyle, color: "var(--text-muted)" }}>{formatTime(r.createdAt)}</td>
+                  <td style={{ ...cellStyle, fontWeight: 600, color: "#ffffff" }}>{r.customerName || "-"}</td>
                   <td style={cellStyle}>{r.driverName || "Unassigned"}</td>
                   <td style={cellStyle}><StatusBadge status={r.status} /></td>
-                  <td style={cellStyle}>
+                  <td style={{ ...cellStyle, color: "#38bdf8", fontWeight: 600 }}>
                     {r.routeDistanceMeters ? (r.routeDistanceMeters / 1000).toFixed(1) + " km" : "-"}
                   </td>
-                  <td style={{ ...cellStyle, fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                    {r.id}
+                  <td style={{ ...cellStyle, fontSize: "0.78rem" }}>
+                    <code style={{ background: "rgba(255, 255, 255, 0.06)", padding: "2px 8px", borderRadius: "4px", color: "#c084fc" }}>
+                      {r.id.slice(0, 8)}...
+                    </code>
                   </td>
                 </tr>
               ))}
@@ -106,6 +131,6 @@ export default function AdminDashboard() {
   );
 }
 
-const cellStyle = { padding: "10px 14px" };
+const cellStyle = { padding: "13px 18px" };
 
 

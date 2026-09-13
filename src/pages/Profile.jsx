@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getUserProfile, updateUserProfileInfo } from "../firebase/authService";
 
@@ -38,10 +38,10 @@ export default function Profile() {
   return (
     <div className="auth-page" style={{ minHeight: "calc(100vh - 66px)" }}>
       <div className="auth-card">
-        <h2>Edit profile</h2>
-        <p className="auth-sub">Update your name, phone, or vehicle type.</p>
+        <h2>Pilot / Rider Profile</h2>
+        <p className="auth-sub">Manage your cosmic identity and contact details.</p>
         {error && <div className="error-banner">{error}</div>}
-        {saved && <div className="hint-box" style={{ marginBottom: 16 }}>Saved successfully.</div>}
+        {saved && <div className="hint-box" style={{ marginBottom: 18, color: "#34d399", borderColor: "rgba(16, 185, 129, 0.4)", background: "rgba(16, 185, 129, 0.12)" }}>✨ Profile updated successfully!</div>}
 
         <form onSubmit={handleSave}>
           <label className="field-label">Full name</label>

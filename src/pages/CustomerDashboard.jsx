@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { createRide, listenToRide, cancelRide, submitRating, boostFare, getRoute, getFareEstimates } from "../firebase/rideService";
 import { getUserProfile } from "../firebase/authService";
@@ -184,55 +184,77 @@ export default function CustomerDashboard() {
             <div className="section-title">Pickup location</div>
             <LocationSearch placeholder="Search pickup point..." onSelect={setPickup} />
             {pickup?.address && (
-              <div className="empty-state" style={{ textAlign: "left", padding: "4px 0" }}>
-                Selected: {pickup.address}
+              <div
+                style={{
+                  background: "rgba(139, 92, 246, 0.12)",
+                  border: "1px solid rgba(139, 92, 246, 0.3)",
+                  borderRadius: "var(--radius-sm)",
+                  padding: "8px 12px",
+                  fontSize: "0.82rem",
+                  color: "#e2e8f0",
+                  marginTop: 6,
+                }}
+              >
+                📍 <strong style={{ color: "#c084fc" }}>Pickup:</strong> {pickup.address}
               </div>
             )}
 
-            <div className="section-title" style={{ marginTop: 8 }}>Destination</div>
+            <div className="section-title" style={{ marginTop: 12 }}>Destination</div>
             <LocationSearch placeholder="Search destination..." onSelect={setDrop} />
             {drop?.address && (
-              <div className="empty-state" style={{ textAlign: "left", padding: "4px 0" }}>
-                Selected: {drop.address}
+              <div
+                style={{
+                  background: "rgba(6, 182, 212, 0.12)",
+                  border: "1px solid rgba(6, 182, 212, 0.3)",
+                  borderRadius: "var(--radius-sm)",
+                  padding: "8px 12px",
+                  fontSize: "0.82rem",
+                  color: "#e2e8f0",
+                  marginTop: 6,
+                }}
+              >
+                🏁 <strong style={{ color: "#38bdf8" }}>Destination:</strong> {drop.address}
               </div>
             )}
 
             {!pickup || !drop ? (
-              <div className="hint-box" style={{ marginTop: 8 }}>
-                {!pickup && "Search or tap the map for pickup"}
-                {pickup && !drop && "Now search or tap the map for destination"}
+              <div className="hint-box" style={{ marginTop: 12 }}>
+                {!pickup && "✦ Search or tap the map for pickup"}
+                {pickup && !drop && "✦ Now search or tap the map for destination"}
               </div>
             ) : previewLoading ? (
-              <div className="hint-box" style={{ marginTop: 8 }}>Calculating fare estimates...</div>
+              <div className="hint-box" style={{ marginTop: 12 }}>✦ Calculating cosmic fare routes...</div>
             ) : fareEstimates ? (
               <>
-                <div className="section-title" style={{ marginTop: 12 }}>Choose a ride</div>
+                <div className="section-title" style={{ marginTop: 14 }}>Choose your spacecraft</div>
                 {vehicleOptions.map((v) => (
                   <div
                     key={v.key}
                     onClick={() => setSelectedVehicle(v.key)}
-                    className="card"
-                    style={{
-                      marginTop: 8,
-                      cursor: "pointer",
-                      border: selectedVehicle === v.key ? "2px solid var(--primary)" : "1px solid var(--border)",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
+                    className={`vehicle-card ${selectedVehicle === v.key ? "selected" : ""}`}
                   >
-                    <span className="card-value">{v.label}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontSize: "1.3rem" }}>
+                        {v.key === "bike" ? "🏍️" : v.key === "auto" ? "🛺" : "🚗"}
+                      </span>
+                      <div>
+                        <div className="card-value">{v.label}</div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                          {v.key === "bike" ? "Swift solo transit" : v.key === "auto" ? "Standard ride" : "Comfort cruiser"}
+                        </div>
+                      </div>
+                    </div>
                     <span className="fare-pill">Rs. {fareEstimates[v.key]}</span>
                   </div>
                 ))}
-                <button className="btn-primary" style={{ marginTop: 12 }} onClick={handleRequestRide} disabled={loading}>
-                  {loading ? "Requesting..." : `Request ${vehicleOptions.find(v => v.key === selectedVehicle).label}`}
+                <button className="btn-primary" style={{ marginTop: 14 }} onClick={handleRequestRide} disabled={loading}>
+                  {loading ? "Initializing Request..." : `Request ${vehicleOptions.find(v => v.key === selectedVehicle).label}`}
                 </button>
               </>
             ) : null}
 
             {(pickup || drop) && (
-              <button className="btn-link" onClick={resetAll}>
+              <button className="btn-link" onClick={resetAll} style={{ alignSelf: "flex-start" }}>
                 Reset points
               </button>
             )}
@@ -246,15 +268,16 @@ export default function CustomerDashboard() {
             className="card"
             style={{
               marginBottom: 12,
-              background: "var(--primary-light)",
+              background: "rgba(139, 92, 246, 0.2)",
               border: "1px solid var(--primary)",
               textAlign: "center",
               fontWeight: 700,
-              color: "var(--primary-dark)",
+              color: "#c084fc",
+              boxShadow: "0 0 20px rgba(139, 92, 246, 0.35)",
             }}
           >
-            {ride.status === "accepted" && `${ride.driverName} is on the way!`}
-            {ride.status === "in-transit" && `${ride.driverName} has started your trip.`}
+            {ride.status === "accepted" && `⚡ ${ride.driverName} is on the way!`}
+            {ride.status === "in-transit" && `🚀 Trip in progress with ${ride.driverName}`}
           </div>
         )}
 
@@ -338,13 +361,11 @@ export default function CustomerDashboard() {
             )}
 
             {showSOS && (
-              
               <a
                 href={`tel:${EMERGENCY_NUMBER}`}
-                className="btn-block"
-                style={{ background: "var(--danger)", color: "white", textAlign: "center", display: "block", textDecoration: "none" }}
+                className="btn-block btn-sos"
               >
-                SOS - Emergency Call
+                🚨 SOS — Emergency Call
               </a>
             )}
 

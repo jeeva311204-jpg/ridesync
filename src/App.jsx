@@ -28,14 +28,28 @@ export default function App() {
               <Link to="/history">History</Link>
               <Link to="/profile">Profile</Link>
               <Link to="/admin">Admin</Link>
-              <span>{user.name}</span>
+              <span className="user-name-badge">
+                <span style={{ color: "#38bdf8", fontSize: "0.85rem" }}>✦</span> {user.name}
+              </span>
               <span className="chip-role">{user.role}</span>
               <button className="btn-ghost" onClick={logout}>Logout</button>
             </>
           ) : (
             <>
               <Link to="/login">Login</Link>
-              <Link to="/register">Register</Link>
+              <Link
+                to="/register"
+                style={{
+                  background: "var(--primary-gradient)",
+                  color: "#ffffff",
+                  padding: "7px 16px",
+                  borderRadius: "var(--radius-sm)",
+                  boxShadow: "0 0 16px rgba(139, 92, 246, 0.4)",
+                  fontWeight: 700,
+                }}
+              >
+                Register
+              </Link>
             </>
           )}
         </div>

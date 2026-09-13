@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -30,8 +30,12 @@ export default function Register() {
   return (
     <div className="auth-page">
       <div className="auth-card">
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+          <span className="brand-dot" />
+          <span style={{ fontFamily: "Outfit", fontWeight: 800, color: "#ffffff", fontSize: "1.1rem" }}>RideSync</span>
+        </div>
         <h2>Create your account</h2>
-        <p className="auth-sub">Join RideSync as a rider or a driver.</p>
+        <p className="auth-sub">Join RideSync network as a cosmic rider or driver.</p>
         {error && <div className="error-banner">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="role-toggle">

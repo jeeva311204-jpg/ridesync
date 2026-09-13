@@ -51,47 +51,55 @@ export default function Receipt() {
   const distanceCharge = distKm ? Math.round(distKm * tier.perKm) : 0;
 
   return (
-    <div style={{ padding: "24px 16px", maxWidth: 480, margin: "0 auto" }}>
-      <div className="auth-card" style={{ width: "100%" }}>
-        <div style={{ textAlign: "center", marginBottom: 8 }}>
-          <span className="brand-dot" style={{ display: "inline-block", marginRight: 6 }} />
-          <strong>RideSync Receipt</strong>
+    <div style={{ padding: "32px 16px", maxWidth: 500, margin: "0 auto" }}>
+      <div className="auth-card" style={{ width: "100%", padding: "36px 28px" }}>
+        <div style={{ textAlign: "center", marginBottom: 12 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <span className="brand-dot" />
+            <span style={{ fontFamily: "Outfit", fontWeight: 800, fontSize: "1.25rem", color: "#ffffff", letterSpacing: "-0.02em" }}>
+              RideSync Voyage Receipt
+            </span>
+          </div>
+          <div>
+            <code style={{ background: "rgba(139, 92, 246, 0.15)", border: "1px solid rgba(139, 92, 246, 0.3)", color: "#c084fc", padding: "3px 10px", borderRadius: "6px", fontSize: "0.78rem" }}>
+              ID: {ride.id}
+            </code>
+          </div>
         </div>
-        <p className="auth-sub" style={{ textAlign: "center" }}>
-          Ride ID: {ride.id}
-        </p>
 
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-row">
-            <span className="card-label">Date</span>
+            <span className="card-label">Timestamp</span>
             <span className="card-value">{formatDateTime(ride.createdAt)}</span>
           </div>
           <div className="card-row">
-            <span className="card-label">Status</span>
+            <span className="card-label">Mission Status</span>
             <StatusBadge status={ride.status} />
           </div>
           <div className="card-row">
-            <span className="card-label">Customer</span>
+            <span className="card-label">Rider</span>
             <span className="card-value">{ride.customerName}</span>
           </div>
           <div className="card-row">
-            <span className="card-label">Driver</span>
+            <span className="card-label">Pilot / Driver</span>
             <span className="card-value">{ride.driverName || "Unassigned"}</span>
           </div>
           {ride.vehicleType && (
             <div className="card-row">
-              <span className="card-label">Vehicle</span>
-              <span className="card-value" style={{ textTransform: "capitalize" }}>{ride.vehicleType}</span>
+              <span className="card-label">Craft Type</span>
+              <span className="card-value" style={{ textTransform: "capitalize" }}>
+                {ride.vehicleType === "bike" ? "🏍️ Bike" : ride.vehicleType === "auto" ? "🛺 Auto" : "🚗 Car"}
+              </span>
             </div>
           )}
         </div>
 
-        <div className="section-title" style={{ marginBottom: 8 }}>Trip details</div>
+        <div className="section-title" style={{ marginBottom: 8 }}>Trip Telemetry</div>
         <div className="card" style={{ marginBottom: 16 }}>
           {distKm && (
             <div className="card-row">
               <span className="card-label">Distance</span>
-              <span className="card-value">{distKm} km</span>
+              <span className="card-value" style={{ color: "#38bdf8" }}>{distKm} km</span>
             </div>
           )}
           {durMin && (
@@ -102,27 +110,29 @@ export default function Receipt() {
           )}
           {ride.rating && (
             <div className="card-row">
-              <span className="card-label">Your rating</span>
-              <span className="card-value">{"★".repeat(ride.rating)}{"☆".repeat(5 - ride.rating)}</span>
+              <span className="card-label">Rating</span>
+              <span className="card-value" style={{ color: "#fbbf24" }}>
+                {"★".repeat(ride.rating)}{"☆".repeat(5 - ride.rating)}
+              </span>
             </div>
           )}
         </div>
 
-        <div className="section-title" style={{ marginBottom: 8 }}>Fare breakdown</div>
-        <div className="card" style={{ marginBottom: 16 }}>
+        <div className="section-title" style={{ marginBottom: 8 }}>Fare Calculation</div>
+        <div className="card" style={{ marginBottom: 20 }}>
           <div className="card-row">
-            <span className="card-label">Base fare</span>
+            <span className="card-label">Base Fare</span>
             <span className="card-value">Rs. {tier.base}</span>
           </div>
           {distKm && (
             <div className="card-row">
-              <span className="card-label">Distance charge ({distKm} km x Rs. {tier.perKm})</span>
+              <span className="card-label">Distance Charge ({distKm} km × Rs. {tier.perKm})</span>
               <span className="card-value">Rs. {distanceCharge}</span>
             </div>
           )}
-          <div className="card-row" style={{ borderTop: "1px solid var(--border)", paddingTop: 8, marginTop: 4 }}>
-            <span className="card-label" style={{ fontWeight: 700 }}>Total fare</span>
-            <span className="fare-pill">Rs. {ride.fare}</span>
+          <div className="card-row" style={{ borderTop: "1px solid var(--border)", paddingTop: 10, marginTop: 6 }}>
+            <span className="card-label" style={{ fontWeight: 700, color: "#ffffff" }}>Final Total</span>
+            <span className="fare-pill" style={{ fontSize: "0.95rem" }}>Rs. {ride.fare}</span>
           </div>
         </div>
 

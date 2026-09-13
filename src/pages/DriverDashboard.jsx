@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
   import { listenToMyRides } from "../firebase/rideService";
   import { getUserProfile } from "../firebase/authService";
@@ -145,31 +145,30 @@ export default function DriverDashboard() {
   return (
     <div className="dashboard">
       <aside className="sidebar">
-        <h2>Driver console</h2>
-        {profile?.averageRating && (
-          <div className="empty-state" style={{ textAlign: "left", padding: "0 0 4px" }}>
-            Your rating: {profile.averageRating} / 5 ({profile.ratingCount} rides rated)
-          </div>
-        )}
-        <div className="card" style={{ marginBottom: 8, padding: "10px 14px" }}>
+        <h2>Driver Cockpit</h2>
+
+        <div className="card" style={{ padding: "14px 16px", background: "rgba(22, 32, 70, 0.65)" }}>
           <div className="card-row">
-            <span className="card-label">Total earnings</span>
-            <span className="fare-pill">Rs. {earnings.total}</span>
+            <span className="card-label">Total Earnings</span>
+            <span className="fare-pill" style={{ fontSize: "0.9rem" }}>Rs. {earnings.total}</span>
           </div>
           <div className="card-row">
-            <span className="card-label">Rides completed</span>
-            <span className="card-value">{earnings.count}</span>
+            <span className="card-label">Missions Completed</span>
+            <span className="card-value" style={{ color: "#38bdf8" }}>{earnings.count} trips</span>
           </div>
+          {profile?.averageRating && (
+            <div className="card-row" style={{ marginTop: 6, paddingTop: 6, borderTop: "1px solid var(--border)" }}>
+              <span className="card-label">Cosmic Rating</span>
+              <span className="card-value" style={{ color: "#fbbf24" }}>
+                ★ {profile.averageRating} <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>({profile.ratingCount || 0})</span>
+              </span>
+            </div>
+          )}
         </div>
-        {profile?.averageRating && (
-          <div className="empty-state" style={{ textAlign: "left", padding: "0 0 8px" }}>
-            Your rating: {profile.averageRating} / 5 ({profile.ratingCount} rides rated)
-          </div>
-        )}
 
         <button className={`toggle-online ${isOnline ? "online" : "offline"}`} onClick={toggleOnline}>
           {isOnline && <span className="pulse-dot" />}
-          {isOnline ? "You are Online" : "Go Online"}
+          {isOnline ? "⚡ System Online — Searching" : "Go Online"}
         </button>
 
         {error && <div className="error-banner">{error}</div>}

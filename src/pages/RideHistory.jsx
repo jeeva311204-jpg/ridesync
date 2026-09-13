@@ -22,44 +22,85 @@ export default function RideHistory() {
   const isDriver = user?.role === "driver";
 
   return (
-    <div style={{ padding: "24px 32px", maxWidth: 800, margin: "0 auto" }}>
-      <h2 style={{ marginBottom: 4 }}>Your ride history</h2>
-      <p style={{ color: "var(--text-muted)", marginTop: 0 }}>
-        {rides.length} ride{rides.length !== 1 ? "s" : ""} total
-      </p>
+    <div style={{ padding: "32px 24px", maxWidth: 840, margin: "0 auto" }}>
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ margin: "0 0 6px", fontSize: "1.6rem" }}>Mission History</h2>
+        <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.92rem" }}>
+          Track and review all your past cosmic journeys ({rides.length} recorded).
+        </p>
+      </div>
 
-      {rides.length === 0 && <div className="empty-state">No rides yet.</div>}
+      {rides.length === 0 && (
+        <div className="card empty-state" style={{ padding: 48 }}>
+          <div style={{ fontSize: "2rem", marginBottom: 8 }}>🌌</div>
+          <p style={{ margin: 0, color: "var(--text-muted)" }}>No mission records found yet.</p>
+        </div>
+      )}
 
       {rides.map((r) => (
-        <div key={r.id} className="card" style={{ marginBottom: 12 }}>
-          <div className="card-row">
-            <span className="card-label">{formatTime(r.createdAt)}</span>
+        <div key={r.id} className="card" style={{ marginBottom: 14, position: "relative", overflow: "hidden" }}>
+          <div className="card-row" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10, marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ color: "var(--accent)", fontSize: "0.9rem" }}>✦</span>
+              <span className="card-label" style={{ fontSize: "0.86rem" }}>{formatTime(r.createdAt)}</span>
+            </div>
             <StatusBadge status={r.status} />
           </div>
+
           <div className="card-row">
             <span className="card-label">{isDriver ? "Customer" : "Driver"}</span>
-            <span className="card-value">{isDriver ? r.customerName : (r.driverName || "Unassigned")}</span>
+            <span className="card-value" style={{ color: "#ffffff" }}>
+              {isDriver ? r.customerName : (r.driverName || "Unassigned")}
+            </span>
           </div>
+
+          {r.vehicleType && (
+            <div className="card-row">
+              <span className="card-label">Craft Type</span>
+              <span className="card-value" style={{ textTransform: "capitalize" }}>
+                {r.vehicleType === "bike" ? "🏍️ Bike" : r.vehicleType === "auto" ? "🛺 Auto" : "🚗 Car"}
+              </span>
+            </div>
+          )}
+
           {r.routeDistanceMeters && (
             <div className="card-row">
               <span className="card-label">Distance</span>
-              <span className="card-value">{(r.routeDistanceMeters / 1000).toFixed(1)} km</span>
+              <span className="card-value" style={{ color: "#38bdf8" }}>{(r.routeDistanceMeters / 1000).toFixed(1)} km</span>
             </div>
           )}
+
           {r.fare !== undefined && (
             <div className="card-row">
               <span className="card-label">Fare</span>
               <span className="fare-pill">Rs. {r.fare}</span>
             </div>
           )}
+
           {!isDriver && r.status === "completed" && r.rating && (
             <div className="card-row">
-              <span className="card-label">Your rating</span>
-              <span className="card-value">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
+              <span className="card-label">Rating</span>
+              <span className="card-value" style={{ color: "#fbbf24" }}>
+                {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
+              </span>
             </div>
           )}
-          <div style={{ marginTop: 10, textAlign: "right" }}>
-            <Link to={`/receipt/${r.id}`} className="btn-link">View Receipt</Link>
+
+          <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end" }}>
+            <Link
+              to={`/receipt/${r.id}`}
+              style={{
+                color: "#38bdf8",
+                textDecoration: "none",
+                fontWeight: 600,
+                fontSize: "0.85rem",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              View Voyage Receipt →
+            </Link>
           </div>
         </div>
       ))}

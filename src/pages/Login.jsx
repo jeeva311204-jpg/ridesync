@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { resetPassword } from "../firebase/authService";
@@ -45,8 +45,12 @@ export default function Login() {
   return (
     <div className="auth-page">
       <div className="auth-card">
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+          <span className="brand-dot" />
+          <span style={{ fontFamily: "Outfit", fontWeight: 800, color: "#ffffff", fontSize: "1.1rem" }}>RideSync</span>
+        </div>
         <h2>Welcome back</h2>
-        <p className="auth-sub">Log in to track or offer rides in real time.</p>
+        <p className="auth-sub">Log in to track or pilot rides across the network.</p>
         {error && <div className="error-banner">{error}</div>}
         {info && <div className="hint-box" style={{ marginBottom: 16 }}>{info}</div>}
         <form onSubmit={handleSubmit}>

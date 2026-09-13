@@ -1,5 +1,5 @@
 ﻿import { describe, it, expect } from "vitest";
-import { calculateFare, getFareEstimates, haversineKm } from "./rideService";
+import { calculateFare, getFareEstimates, haversineKm } from "./pricing";
 
 describe("calculateFare", () => {
   it("returns just the base fare when distance is 0 or missing", () => {
@@ -9,17 +9,14 @@ describe("calculateFare", () => {
   });
 
   it("calculates car fare correctly for a given distance", () => {
-    // 5km at car rate: base 40 + (5 * 12) = 100
     expect(calculateFare(5000, "car")).toBe(100);
   });
 
   it("calculates bike fare correctly for a given distance", () => {
-    // 5km at bike rate: base 20 + (5 * 8) = 60
     expect(calculateFare(5000, "bike")).toBe(60);
   });
 
   it("calculates auto fare correctly for a given distance", () => {
-    // 5km at auto rate: base 30 + (5 * 10) = 80
     expect(calculateFare(5000, "auto")).toBe(80);
   });
 
@@ -28,7 +25,6 @@ describe("calculateFare", () => {
   });
 
   it("rounds the fare to the nearest whole number", () => {
-    // 3.3km at car rate: 40 + (3.3 * 12) = 79.6 -> should round to 80
     expect(calculateFare(3300, "car")).toBe(80);
   });
 });
@@ -65,7 +61,6 @@ describe("haversineKm", () => {
   });
 
   it("calculates a reasonable distance between two known points", () => {
-    // Tiruppur to Coimbatore is roughly 45-50km apart
     const tiruppur = { lat: 11.1085, lng: 77.3411 };
     const coimbatore = { lat: 11.0168, lng: 76.9558 };
     const distance = haversineKm(tiruppur, coimbatore);

@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+﻿import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
-import { createRide, listenToRide, cancelRide, submitRating, getRoute, getFareEstimates } from "../firebase/rideService";
+import { createRide, listenToRide, cancelRide, submitRating, boostFare, getRoute, getFareEstimates } from "../firebase/rideService";
+import { getUserProfile } from "../firebase/authService";
 import MapView from "../components/MapView.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import StarRating from "../components/StarRating.jsx";
 import LocationSearch from "../components/LocationSearch.jsx";
-  import { getUserProfile } from "../firebase/authService";
+import { Link } from "react-router-dom";
 
 const EMERGENCY_NUMBER = "112";
 
@@ -19,19 +19,11 @@ export default function CustomerDashboard() {
   const [selectedVehicle, setSelectedVehicle] = useState("car");
   const [previewLoading, setPreviewLoading] = useState(false);
   const [ride, setRide] = useState(null);
+  const [driverProfile, setDriverProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const prevStatusRef = useRef(null);
-  const [driverProfile, setDriverProfile] = useState(null);
-
-  useEffect(() => {
-    if (ride?.driverId) {
-      getUserProfile(ride.driverId).then(setDriverProfile);
-    } else {
-      setDriverProfile(null);
-    }
-  }, [ride?.driverId]);
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
@@ -78,7 +70,14 @@ export default function CustomerDashboard() {
     return unsub;
   }, [ride?.id]);
 
-  // Once both points are set, fetch the route once and compute fare estimates for all vehicle types.
+  useEffect(() => {
+    if (ride?.driverId) {
+      getUserProfile(ride.driverId).then(setDriverProfile);
+    } else {
+      setDriverProfile(null);
+    }
+  }, [ride?.driverId]);
+
   useEffect(() => {
     if (!pickup || !drop || ride) {
       setRoutePreview(null);
@@ -140,8 +139,18 @@ export default function CustomerDashboard() {
     }
   }
 
+  async function handleBoost(amount) {
+    if (!ride) return;
+    try {
+      await boostFare(ride.id, amount);
+    } catch {
+      setError("Could not add boost.");
+    }
+  }
+
   function resetAll() {
     setRide(null);
+    setDriverProfile(null);
     setPickup(null);
     setDrop(null);
     setRoutePreview(null);
@@ -155,6 +164,7 @@ export default function CustomerDashboard() {
   const distKm = ride?.routeDistanceMeters ? (ride.routeDistanceMeters / 1000).toFixed(1) : null;
   const canCancel = ride && ["requested", "accepted"].includes(ride.status);
   const showSOS = ride && ["accepted", "in-transit"].includes(ride.status);
+  const showBanner = ride && ["accepted", "in-transit"].includes(ride.status);
 
   const vehicleOptions = [
     { key: "bike", label: "Bike" },
@@ -231,47 +241,20 @@ export default function CustomerDashboard() {
 
         {error && <div className="error-banner">{error}</div>}
 
-        {ride && ["accepted", "in-transit"].includes(ride.status) && (
+        {showBanner && (
           <div
+            className="card"
             style={{
-              background: ride.status === "accepted" ? "var(--primary-light)" : "var(--success-light)",
-              border: `1.5px solid ${ride.status === "accepted" ? "var(--primary)" : "var(--success)"}`,
-              borderRadius: "var(--radius-md)",
-              padding: "14px 16px",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              boxShadow: "var(--shadow-sm)",
+              marginBottom: 12,
+              background: "var(--primary-light)",
+              border: "1px solid var(--primary)",
+              textAlign: "center",
+              fontWeight: 700,
+              color: "var(--primary-dark)",
             }}
           >
-            <span
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: "50%",
-                background: ride.status === "accepted" ? "var(--primary)" : "var(--success)",
-                display: "inline-block",
-                flexShrink: 0,
-              }}
-            />
-            <div>
-              <div
-                style={{
-                  fontWeight: 800,
-                  fontSize: "0.95rem",
-                  color: ride.status === "accepted" ? "var(--primary-dark)" : "var(--success)",
-                }}
-              >
-                {ride.status === "accepted"
-                  ? `${ride.driverName || "Driver"} is on the way`
-                  : `${ride.driverName || "Driver"} has started your trip`}
-              </div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 2 }}>
-                {ride.status === "accepted"
-                  ? "Track live driver location on the map"
-                  : "Enjoy your ride! Tracking live on map"}
-              </div>
-            </div>
+            {ride.status === "accepted" && `${ride.driverName} is on the way!`}
+            {ride.status === "in-transit" && `${ride.driverName} has started your trip.`}
           </div>
         )}
 
@@ -331,9 +314,21 @@ export default function CustomerDashboard() {
             )}
 
             {ride.status === "requested" && (
-              <p className="empty-state" style={{ padding: "12px 0 0" }}>
-                Waiting for a nearby driver to accept...
-              </p>
+              <>
+                <p className="empty-state" style={{ padding: "12px 0 0" }}>
+                  Waiting for a nearby driver to accept...
+                </p>
+                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                  <button className="btn-outline btn-block" style={{ marginTop: 0 }} onClick={() => handleBoost(20)}>
+                    Add Rs. 20 to get matched faster
+                  </button>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="btn-outline btn-block" style={{ marginTop: 0 }} onClick={() => handleBoost(30)}>
+                    Add Rs. 30 to get matched faster
+                  </button>
+                </div>
+              </>
             )}
 
             {canCancel && (
@@ -362,11 +357,7 @@ export default function CustomerDashboard() {
 
             {ride.status === "completed" && (
               <>
-                <Link
-                  to={`/receipt/${ride.id}`}
-                  className="btn-block btn-outline"
-                  style={{ textAlign: "center", display: "block", textDecoration: "none" }}
-                >
+                <Link to={`/receipt/${ride.id}`} className="btn-block btn-outline" style={{ textAlign: "center", display: "block", textDecoration: "none" }}>
                   View Receipt
                 </Link>
                 <button className="btn-block btn-success" onClick={resetAll}>

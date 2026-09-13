@@ -1,4 +1,4 @@
-import {
+﻿import {
   ref,
   push,
   set,
@@ -236,6 +236,17 @@ export async function updateRideStatus(rideId, status) {
   }
 }
 
+export async function boostFare(rideId, amount) {
+  const rideRef = ref(db, `rides/${rideId}`);
+  await runTransaction(rideRef, (current) => {
+    if (!current) return current;
+    if (current.status !== "requested") return current;
+    current.fare = (current.fare || 0) + amount;
+    current.boosted = true;
+    return current;
+  });
+}
+
 export async function cancelRide(rideId) {
   const snap = await get(ref(db, `rides/${rideId}`));
   const ride = snap.val();
@@ -281,3 +292,4 @@ export async function submitRating(rideId, driverId, stars) {
     return current;
   });
 }
+

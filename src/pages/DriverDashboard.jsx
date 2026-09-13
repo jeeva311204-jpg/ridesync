@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
+  import { listenToMyRides } from "../firebase/rideService";
   import { getUserProfile } from "../firebase/authService";
 import {
   listenToRequestedRides,
@@ -24,6 +25,21 @@ export default function DriverDashboard() {
   const [error, setError] = useState("");
   const [profile, setProfile] = useState(null);
   const watchIdRef = useRef(null);
+  const [earnings, setEarnings] = useState({ total: 0, count: 0 });
+
+  useEffect(() => {
+    getUserProfile(user.uid).then(setProfile);
+  }, [user.uid, activeRide]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    const unsub = listenToMyRides(user.uid, (rides) => {
+      const completed = rides.filter((r) => r.status === "completed");
+      const total = completed.reduce((sum, r) => sum + (r.fare || 0), 0);
+      setEarnings({ total, count: completed.length });
+    });
+    return unsub;
+  }, [user?.uid]);
 
   useEffect(() => {
     getUserProfile(user.uid).then(setProfile);
@@ -130,6 +146,21 @@ export default function DriverDashboard() {
     <div className="dashboard">
       <aside className="sidebar">
         <h2>Driver console</h2>
+        {profile?.averageRating && (
+          <div className="empty-state" style={{ textAlign: "left", padding: "0 0 4px" }}>
+            Your rating: {profile.averageRating} / 5 ({profile.ratingCount} rides rated)
+          </div>
+        )}
+        <div className="card" style={{ marginBottom: 8, padding: "10px 14px" }}>
+          <div className="card-row">
+            <span className="card-label">Total earnings</span>
+            <span className="fare-pill">Rs. {earnings.total}</span>
+          </div>
+          <div className="card-row">
+            <span className="card-label">Rides completed</span>
+            <span className="card-value">{earnings.count}</span>
+          </div>
+        </div>
         {profile?.averageRating && (
           <div className="empty-state" style={{ textAlign: "left", padding: "0 0 8px" }}>
             Your rating: {profile.averageRating} / 5 ({profile.ratingCount} rides rated)

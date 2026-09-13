@@ -48,7 +48,12 @@ export default function Receipt() {
     car: { base: 40, perKm: 12 },
   };
   const tier = PRICING[ride.vehicleType] || PRICING.car;
+  const baseFare = tier.base;
   const distanceCharge = distKm ? Math.round(distKm * tier.perKm) : 0;
+  const standardTotal = baseFare + distanceCharge;
+  // If the ride had a priority match boost added, break it out so the calculation adds up perfectly (40 + 25 + 20 = 85)
+  const boostAmount = ride.boostAmount || (ride.fare && ride.fare > standardTotal ? ride.fare - standardTotal : 0);
+  const finalTotal = standardTotal + boostAmount;
 
   return (
     <div style={{ padding: "32px 16px", maxWidth: 500, margin: "0 auto" }}>
@@ -122,7 +127,7 @@ export default function Receipt() {
         <div className="card" style={{ marginBottom: 20 }}>
           <div className="card-row">
             <span className="card-label">Base Fare</span>
-            <span className="card-value">Rs. {tier.base}</span>
+            <span className="card-value">Rs. {baseFare}</span>
           </div>
           {distKm && (
             <div className="card-row">
@@ -130,9 +135,15 @@ export default function Receipt() {
               <span className="card-value">Rs. {distanceCharge}</span>
             </div>
           )}
+          {boostAmount > 0 && (
+            <div className="card-row">
+              <span className="card-label">Priority Match Boost</span>
+              <span className="card-value" style={{ color: "#fbbf24", fontWeight: 700 }}>+ Rs. {boostAmount}</span>
+            </div>
+          )}
           <div className="card-row" style={{ borderTop: "1px solid var(--border)", paddingTop: 10, marginTop: 6 }}>
             <span className="card-label" style={{ fontWeight: 700, color: "#ffffff" }}>Final Total</span>
-            <span className="fare-pill" style={{ fontSize: "0.95rem" }}>Rs. {ride.fare}</span>
+            <span className="fare-pill" style={{ fontSize: "0.95rem" }}>Rs. {finalTotal}</span>
           </div>
         </div>
 

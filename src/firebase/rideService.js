@@ -1,4 +1,4 @@
-﻿import {
+import {
   ref,
   push,
   set,
@@ -242,6 +242,7 @@ export async function boostFare(rideId, amount) {
     if (!current) return current;
     if (current.status !== "requested") return current;
     current.fare = (current.fare || 0) + amount;
+    current.boostAmount = (current.boostAmount || 0) + amount;
     current.boosted = true;
     return current;
   });

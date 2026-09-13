@@ -317,7 +317,10 @@ export default function CustomerDashboard() {
             {ride.fare !== undefined && (
               <div className="card-row">
                 <span className="card-label">Fare</span>
-                <span className="fare-pill">Rs. {ride.fare}</span>
+                <span className="fare-pill">
+                  Rs. {ride.fare}
+                  {ride.boostAmount ? ` (+Rs. ${ride.boostAmount} boost)` : ""}
+                </span>
               </div>
             )}
 
@@ -343,12 +346,12 @@ export default function CustomerDashboard() {
                 </p>
                 <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                   <button className="btn-outline btn-block" style={{ marginTop: 0 }} onClick={() => handleBoost(20)}>
-                    Add Rs. 20 to get matched faster
+                    🚀 Add Rs. 20 Priority Match Boost
                   </button>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button className="btn-outline btn-block" style={{ marginTop: 0 }} onClick={() => handleBoost(30)}>
-                    Add Rs. 30 to get matched faster
+                    🚀 Add Rs. 30 Priority Match Boost
                   </button>
                 </div>
               </>

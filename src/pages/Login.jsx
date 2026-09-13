@@ -1,6 +1,7 @@
 ﻿import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { resetPassword } from "../firebase/authService";
 
 export default function Login() {
   const { login } = useAuth();
@@ -8,11 +9,13 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setInfo("");
     setBusy(true);
     try {
       const user = await login(email, password);
@@ -24,12 +27,28 @@ export default function Login() {
     }
   }
 
+  async function handleForgotPassword() {
+    setError("");
+    setInfo("");
+    if (!email) {
+      setError("Enter your email above first, then click Forgot password.");
+      return;
+    }
+    try {
+      await resetPassword(email);
+      setInfo("Password reset email sent. Check your inbox.");
+    } catch (err) {
+      setError(err.message || "Could not send reset email.");
+    }
+  }
+
   return (
     <div className="auth-page">
       <div className="auth-card">
         <h2>Welcome back</h2>
         <p className="auth-sub">Log in to track or offer rides in real time.</p>
         {error && <div className="error-banner">{error}</div>}
+        {info && <div className="hint-box" style={{ marginBottom: 16 }}>{info}</div>}
         <form onSubmit={handleSubmit}>
           <label className="field-label">Email</label>
           <input
@@ -51,6 +70,9 @@ export default function Login() {
             {busy ? "Logging in..." : "Log In"}
           </button>
         </form>
+        <button className="btn-link" onClick={handleForgotPassword} style={{ marginTop: 10 }}>
+          Forgot password?
+        </button>
         <p className="auth-footer">
           No account? <Link to="/register">Register</Link>
         </p>

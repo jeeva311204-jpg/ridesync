@@ -5,6 +5,8 @@ import Register from "./pages/Register.jsx";
 import CustomerDashboard from "./pages/CustomerDashboard.jsx";
 import DriverDashboard from "./pages/DriverDashboard.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import RideHistory from "./pages/RideHistory.jsx";
+import Profile from "./pages/Profile.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export default function App() {
@@ -22,6 +24,8 @@ export default function App() {
         <div className="nav-right">
           {user ? (
             <>
+              <Link to="/history">History</Link>
+              <Link to="/profile">Profile</Link>
               <Link to="/admin">Admin</Link>
               <span>{user.name}</span>
               <span className="chip-role">{user.role}</span>
@@ -60,6 +64,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/history"
+          element={
+            <ProtectedRoute>
+              <RideHistory />
             </ProtectedRoute>
           }
         />

@@ -1,10 +1,13 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
+  import { getUserProfile } from "../firebase/authService";
 import {
   listenToRequestedRides,
+  listenToNearbyRequestedRides,
   listenToRide,
   acceptRide,
   updateRideStatus,
+  cancelRide,
   updateDriverLocation,
   setDriverAvailability,
   haversineKm,
@@ -19,20 +22,34 @@ export default function DriverDashboard() {
   const [activeRide, setActiveRide] = useState(null);
   const [myPos, setMyPos] = useState(null);
   const [error, setError] = useState("");
+  const [profile, setProfile] = useState(null);
   const watchIdRef = useRef(null);
+
+  useEffect(() => {
+    getUserProfile(user.uid).then(setProfile);
+  }, [user.uid, activeRide]);
 
   useEffect(() => {
     if (!isOnline || activeRide) {
       setRequests([]);
       return;
     }
-    const unsub = listenToRequestedRides(setRequests);
+    const unsub = myPos
+      ? listenToNearbyRequestedRides(myPos, setRequests)
+      : listenToRequestedRides(setRequests);
     return unsub;
-  }, [isOnline, activeRide]);
+  }, [isOnline, activeRide, myPos]);
 
   useEffect(() => {
     if (!activeRide?.id) return;
-    const unsub = listenToRide(activeRide.id, (updated) => updated && setActiveRide(updated));
+    const unsub = listenToRide(activeRide.id, (updated) => {
+      if (!updated) return;
+      if (updated.status === "cancelled") {
+        setActiveRide(null);
+        return;
+      }
+      setActiveRide(updated);
+    });
     return unsub;
   }, [activeRide?.id]);
 
@@ -81,6 +98,16 @@ export default function DriverDashboard() {
     }
   }
 
+  async function handleCancel() {
+    if (!activeRide) return;
+    try {
+      await cancelRide(activeRide.id);
+      setActiveRide(null);
+    } catch {
+      setError("Could not cancel ride.");
+    }
+  }
+
   async function advance(nextStatus) {
     if (!activeRide) return;
     try {
@@ -103,6 +130,11 @@ export default function DriverDashboard() {
     <div className="dashboard">
       <aside className="sidebar">
         <h2>Driver console</h2>
+        {profile?.averageRating && (
+          <div className="empty-state" style={{ textAlign: "left", padding: "0 0 8px" }}>
+            Your rating: {profile.averageRating} / 5 ({profile.ratingCount} rides rated)
+          </div>
+        )}
 
         <button className={`toggle-online ${isOnline ? "online" : "offline"}`} onClick={toggleOnline}>
           {isOnline && <span className="pulse-dot" />}
@@ -123,6 +155,12 @@ export default function DriverDashboard() {
                   <span className="card-label">Customer</span>
                   <span className="card-value">{r.customerName}</span>
                 </div>
+                {r.vehicleType && (
+                  <div className="card-row">
+                    <span className="card-label">Vehicle type</span>
+                    <span className="card-value" style={{ textTransform: "capitalize" }}>{r.vehicleType}</span>
+                  </div>
+                )}
                 {myPos && (
                   <div className="card-row">
                     <span className="card-label">Distance to pickup</span>
@@ -138,7 +176,7 @@ export default function DriverDashboard() {
                 {r.fare !== undefined && (
                   <div className="card-row">
                     <span className="card-label">Fare</span>
-                    <span className="fare-pill">₹{r.fare}</span>
+                    <span className="fare-pill">Rs. {r.fare}</span>
                   </div>
                 )}
                 <button className="btn-block btn-info" onClick={() => handleAccept(r.id)}>
@@ -159,23 +197,30 @@ export default function DriverDashboard() {
               <span className="card-label">Customer</span>
               <span className="card-value">{activeRide.customerName}</span>
             </div>
+            {activeRide.vehicleType && (
+              <div className="card-row">
+                <span className="card-label">Vehicle</span>
+                <span className="card-value" style={{ textTransform: "capitalize" }}>{activeRide.vehicleType}</span>
+              </div>
+            )}
             {activeRide.fare !== undefined && (
               <div className="card-row">
                 <span className="card-label">Fare</span>
-                <span className="fare-pill">₹{activeRide.fare}</span>
+                <span className="fare-pill">Rs. {activeRide.fare}</span>
               </div>
             )}
 
             {activeRide.customerPhone && (
               <div className="contact-row">
-                <a className="contact-btn call" href={`tel:+${activeRide.customerPhone}`}>Call: {activeRide.customerPhone}</a>
+                <a className="contact-btn call" href={`tel:+${activeRide.customerPhone}`}>Call Customer</a>
+                
                 <a
                   className="contact-btn whatsapp"
                   href={`https://wa.me/${activeRide.customerPhone}?text=${encodeURIComponent(`Hi ${activeRide.customerName}, this is your RideSync driver. I have accepted your ride and am on the way!`)}`}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  💬 WhatsApp
+                  WhatsApp
                 </a>
               </div>
             )}
@@ -188,6 +233,11 @@ export default function DriverDashboard() {
             {activeRide.status === "in-transit" && (
               <button className="btn-block btn-success" onClick={() => advance("completed")}>
                 Complete Trip
+              </button>
+            )}
+            {["accepted"].includes(activeRide.status) && (
+              <button className="btn-block btn-outline" onClick={handleCancel}>
+                Cancel Ride
               </button>
             )}
           </div>
@@ -205,5 +255,3 @@ export default function DriverDashboard() {
     </div>
   );
 }
-
-

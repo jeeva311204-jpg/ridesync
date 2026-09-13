@@ -1,4 +1,4 @@
-﻿import {
+import {
   ref,
   push,
   set,
@@ -9,19 +9,38 @@
   query,
   orderByChild,
   equalTo,
+  startAt,
+  endAt,
 } from "firebase/database";
+import {
+  geohashForLocation,
+  geohashQueryBounds,
+  distanceBetween,
+} from "geofire-common";
 import { db } from "./config";
 
 const OSRM_BASE_URL = "https://router.project-osrm.org";
 
-// Pricing model: base fare + per-km rate. Adjust these two numbers to change pricing.
-const BASE_FARE = 40;
-const PER_KM_RATE = 12;
+// Pricing tiers by vehicle type: base fare + per-km rate
+const PRICING = {
+  bike: { base: 20, perKm: 8 },
+  auto: { base: 30, perKm: 10 },
+  car: { base: 40, perKm: 12 },
+};
 
-export function calculateFare(distanceMeters) {
-  if (!distanceMeters) return BASE_FARE;
+export function calculateFare(distanceMeters, vehicleType = "car") {
+  const tier = PRICING[vehicleType] || PRICING.car;
+  if (!distanceMeters) return tier.base;
   const km = distanceMeters / 1000;
-  return Math.round(BASE_FARE + km * PER_KM_RATE);
+  return Math.round(tier.base + km * tier.perKm);
+}
+
+export function getFareEstimates(distanceMeters) {
+  return {
+    bike: calculateFare(distanceMeters, "bike"),
+    auto: calculateFare(distanceMeters, "auto"),
+    car: calculateFare(distanceMeters, "car"),
+  };
 }
 
 export function haversineKm(a, b) {
@@ -55,10 +74,23 @@ export async function getRoute(pickup, drop) {
   }
 }
 
-export async function createRide({ customer, pickup, drop }) {
-  const route = await getRoute(pickup, drop);
-  const fare = calculateFare(route?.distanceMeters);
+// Accepts an optional pre-fetched route (from the fare-estimate preview) so we
+// do not hit OSRM twice for the same trip.
+export async function createRide({ customer, pickup, drop, vehicleType = "car", precomputedRoute = null }) {
+  const route = precomputedRoute || (await getRoute(pickup, drop));
+  const fare = calculateFare(route?.distanceMeters, vehicleType);
   const rideRef = push(ref(db, "rides"));
+
+  const pickupGeohash =
+    pickup?.lat != null && pickup?.lng != null
+      ? geohashForLocation([Number(pickup.lat), Number(pickup.lng)])
+      : null;
+
+  const pickupData = {
+    ...pickup,
+    ...(pickupGeohash ? { geohash: pickupGeohash } : {}),
+  };
+
   const ride = {
     id: rideRef.key,
     customerId: customer.uid,
@@ -67,10 +99,12 @@ export async function createRide({ customer, pickup, drop }) {
     driverId: null,
     driverName: null,
     driverPhone: null,
-    pickup,
+    pickup: pickupData,
     drop,
+    vehicleType,
     status: "requested",
     fare,
+    rating: null,
     routeDistanceMeters: route?.distanceMeters ?? null,
     routeDurationSeconds: route?.durationSeconds ?? null,
     routePath: route?.pathLatLngs ?? null,
@@ -90,6 +124,61 @@ export function listenToRequestedRides(callback) {
   });
 }
 
+export function listenToNearbyRequestedRides(driverPos, callback) {
+  if (!driverPos || driverPos.lat == null || driverPos.lng == null) {
+    callback([]);
+    return () => {};
+  }
+
+  const center = [Number(driverPos.lat), Number(driverPos.lng)];
+  const radiusInM = 5000;
+  const bounds = geohashQueryBounds(center, radiusInM);
+
+  const ridesByQuery = new Map();
+
+  function updateResults() {
+    const combinedMap = new Map();
+    for (const rides of ridesByQuery.values()) {
+      for (const ride of rides) {
+        if (!ride || ride.status !== "requested") continue;
+        if (!ride.pickup || ride.pickup.lat == null || ride.pickup.lng == null) continue;
+        const distKm = distanceBetween(center, [
+          Number(ride.pickup.lat),
+          Number(ride.pickup.lng),
+        ]);
+        if (distKm <= 5) {
+          combinedMap.set(ride.id, ride);
+        }
+      }
+    }
+    const result = Array.from(combinedMap.values()).sort(
+      (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
+    );
+    callback(result);
+  }
+
+  const unsubs = bounds.map(([start, end], index) => {
+    const q = query(
+      ref(db, "rides"),
+      orderByChild("pickup/geohash"),
+      startAt(start),
+      endAt(end)
+    );
+    return onValue(q, (snap) => {
+      const rides = [];
+      snap.forEach((child) => {
+        rides.push(child.val());
+      });
+      ridesByQuery.set(index, rides);
+      updateResults();
+    });
+  });
+
+  return () => {
+    unsubs.forEach((unsub) => unsub());
+  };
+}
+
 export function listenToRide(rideId, callback) {
   return onValue(ref(db, `rides/${rideId}`), (snap) => {
     callback(snap.exists() ? snap.val() : null);
@@ -100,6 +189,17 @@ export function listenToAllRides(callback) {
   return onValue(ref(db, "rides"), (snap) => {
     const rides = [];
     snap.forEach((child) => { rides.push(child.val()); });
+    callback(rides.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
+  });
+}
+
+export function listenToMyRides(uid, callback) {
+  return onValue(ref(db, "rides"), (snap) => {
+    const rides = [];
+    snap.forEach((child) => {
+      const r = child.val();
+      if (r.customerId === uid || r.driverId === uid) rides.push(r);
+    });
     callback(rides.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
   });
 }
@@ -136,8 +236,26 @@ export async function updateRideStatus(rideId, status) {
   }
 }
 
+export async function cancelRide(rideId) {
+  const snap = await get(ref(db, `rides/${rideId}`));
+  const ride = snap.val();
+  if (!ride) return;
+  await update(ref(db, `rides/${rideId}`), { status: "cancelled", cancelledAt: Date.now() });
+  if (ride.driverId) {
+    await update(ref(db, `users/${ride.driverId}`), { isAvailable: true });
+  }
+}
+
 export async function updateDriverLocation(uid, lat, lng, activeRideId) {
-  await update(ref(db, `users/${uid}`), { lat, lng });
+  const geohash =
+    lat != null && lng != null
+      ? geohashForLocation([Number(lat), Number(lng)])
+      : null;
+  const userUpdates = { lat, lng };
+  if (geohash) {
+    userUpdates.geohash = geohash;
+  }
+  await update(ref(db, `users/${uid}`), userUpdates);
   if (activeRideId) {
     await update(ref(db, `rides/${activeRideId}`), { driverLocation: { lat, lng } });
   }
@@ -145,4 +263,21 @@ export async function updateDriverLocation(uid, lat, lng, activeRideId) {
 
 export async function setDriverAvailability(uid, isAvailable) {
   await update(ref(db, `users/${uid}`), { isAvailable });
+}
+
+export async function submitRating(rideId, driverId, stars) {
+  await update(ref(db, `rides/${rideId}`), { rating: stars });
+
+  const driverRef = ref(db, `users/${driverId}`);
+  await runTransaction(driverRef, (current) => {
+    if (!current) return current;
+    const prevCount = current.ratingCount || 0;
+    const prevSum = current.ratingSum || 0;
+    const newCount = prevCount + 1;
+    const newSum = prevSum + stars;
+    current.ratingCount = newCount;
+    current.ratingSum = newSum;
+    current.averageRating = Math.round((newSum / newCount) * 10) / 10;
+    return current;
+  });
 }

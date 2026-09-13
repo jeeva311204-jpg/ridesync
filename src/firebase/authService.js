@@ -3,8 +3,9 @@
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
+  sendPasswordResetEmail,
 } from "firebase/auth";
-import { ref, set, get } from "firebase/database";
+import { ref, set, get, update } from "firebase/database";
 import { auth, db } from "./config";
 
 export async function registerUser({ name, email, password, role, vehicleType, phone }) {
@@ -42,4 +43,17 @@ export async function logoutUser() {
 export async function getUserProfile(uid) {
   const snap = await get(ref(db, `users/${uid}`));
   return snap.exists() ? snap.val() : null;
+}
+
+export async function resetPassword(email) {
+  await sendPasswordResetEmail(auth, email);
+}
+
+export async function updateUserProfileInfo(uid, { name, phone, vehicleType }) {
+  const updates = {};
+  if (name !== undefined) updates.name = name;
+  if (phone !== undefined) updates.phone = phone;
+  if (vehicleType !== undefined) updates.vehicleType = vehicleType;
+  await update(ref(db, `users/${uid}`), updates);
+  return updates;
 }

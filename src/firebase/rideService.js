@@ -1,4 +1,4 @@
-import {
+﻿import {
   ref,
   push,
   set,
@@ -44,6 +44,7 @@ export function getFareEstimates(distanceMeters) {
 }
 
 export function haversineKm(a, b) {
+  if (!a || !b) return 0;
   const R = 6371;
   const dLat = ((b.lat - a.lat) * Math.PI) / 180;
   const dLng = ((b.lng - a.lng) * Math.PI) / 180;
@@ -293,4 +294,5 @@ export async function submitRating(rideId, driverId, stars) {
     return current;
   });
 }
+
 

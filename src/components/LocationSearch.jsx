@@ -20,7 +20,7 @@ export default function LocationSearch({ placeholder, onSelect }) {
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(value)}`;
+        const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=in&q=${encodeURIComponent(value)}`;
         const res = await fetch(url);
         const data = await res.json();
         setResults(data);
@@ -30,7 +30,7 @@ export default function LocationSearch({ placeholder, onSelect }) {
       } finally {
         setLoading(false);
       }
-    }, 500);
+    }, 1200);
   }
 
   function handleSelect(place) {
@@ -97,3 +97,5 @@ export default function LocationSearch({ placeholder, onSelect }) {
     </div>
   );
 }
+
+

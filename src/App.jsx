@@ -1,4 +1,4 @@
-﻿import { Routes, Route, Navigate, Link } from "react-router-dom";
+import { Routes, Route, Navigate, Link } from "react-router-dom";
 import { useAuth } from "./context/AuthContext.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
@@ -7,6 +7,7 @@ import DriverDashboard from "./pages/DriverDashboard.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import RideHistory from "./pages/RideHistory.jsx";
 import Profile from "./pages/Profile.jsx";
+import Receipt from "./pages/Receipt.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export default function App() {
@@ -80,6 +81,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <RideHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/receipt/:rideId"
+          element={
+            <ProtectedRoute>
+              <Receipt />
             </ProtectedRoute>
           }
         />

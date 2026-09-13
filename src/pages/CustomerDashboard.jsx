@@ -1,4 +1,5 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { createRide, listenToRide, cancelRide, submitRating, getRoute, getFareEstimates } from "../firebase/rideService";
 import MapView from "../components/MapView.jsx";
@@ -230,6 +231,50 @@ export default function CustomerDashboard() {
 
         {error && <div className="error-banner">{error}</div>}
 
+        {ride && ["accepted", "in-transit"].includes(ride.status) && (
+          <div
+            style={{
+              background: ride.status === "accepted" ? "var(--primary-light)" : "var(--success-light)",
+              border: `1.5px solid ${ride.status === "accepted" ? "var(--primary)" : "var(--success)"}`,
+              borderRadius: "var(--radius-md)",
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              boxShadow: "var(--shadow-sm)",
+            }}
+          >
+            <span
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                background: ride.status === "accepted" ? "var(--primary)" : "var(--success)",
+                display: "inline-block",
+                flexShrink: 0,
+              }}
+            />
+            <div>
+              <div
+                style={{
+                  fontWeight: 800,
+                  fontSize: "0.95rem",
+                  color: ride.status === "accepted" ? "var(--primary-dark)" : "var(--success)",
+                }}
+              >
+                {ride.status === "accepted"
+                  ? `${ride.driverName || "Driver"} is on the way`
+                  : `${ride.driverName || "Driver"} has started your trip`}
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 2 }}>
+                {ride.status === "accepted"
+                  ? "Track live driver location on the map"
+                  : "Enjoy your ride! Tracking live on map"}
+              </div>
+            </div>
+          </div>
+        )}
+
         {ride && (
           <div className="card">
             <div className="card-row">
@@ -316,9 +361,18 @@ export default function CustomerDashboard() {
             )}
 
             {ride.status === "completed" && (
-              <button className="btn-block btn-success" onClick={resetAll}>
-                Book Another Ride
-              </button>
+              <>
+                <Link
+                  to={`/receipt/${ride.id}`}
+                  className="btn-block btn-outline"
+                  style={{ textAlign: "center", display: "block", textDecoration: "none" }}
+                >
+                  View Receipt
+                </Link>
+                <button className="btn-block btn-success" onClick={resetAll}>
+                  Book Another Ride
+                </button>
+              </>
             )}
 
             {ride.status === "cancelled" && (

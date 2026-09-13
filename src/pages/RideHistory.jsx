@@ -1,4 +1,5 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { listenToMyRides } from "../firebase/rideService";
 import StatusBadge from "../components/StatusBadge.jsx";
@@ -57,6 +58,9 @@ export default function RideHistory() {
               <span className="card-value">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
             </div>
           )}
+          <div style={{ marginTop: 10, textAlign: "right" }}>
+            <Link to={`/receipt/${r.id}`} className="btn-link">View Receipt</Link>
+          </div>
         </div>
       ))}
     </div>
